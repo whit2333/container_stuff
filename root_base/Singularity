@@ -5,7 +5,7 @@ From: whit2333/root_base:latest
 # global
 # =======================
 %runscript
-  root "$@"
+  /bin/bash "$@"
 
 %post
   echo "Hello from inside the container"
@@ -22,6 +22,12 @@ From: whit2333/root_base:latest
 #%environment
 #    export LC_ALL=C
 #    export PATH=/usr/games:$PATH
+
+# =======================
+# root-config
+# =======================
+%apprun root
+    root "$@"
 
 # =======================
 # root-config
