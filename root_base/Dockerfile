@@ -2,7 +2,7 @@
 #
 # A container for the latest root
 #
-FROM ubuntu:artful
+FROM ubuntu:latest
 LABEL maintainer "Whitney Armstrong <warmstrong@anl.gov>"
 #
 RUN apt-get update  \
@@ -22,30 +22,34 @@ RUN apt-get update  \
       && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
       && apt-get update \
       && apt-get install -y \
-      make cmake gcc g++ curl wget \
+      make cmake gcc g++ curl wget libcurl4-openssl-dev \
       libxmu-dev libxmuu-dev git dpkg-dev  binutils language-pack-en \
       libx11-dev libxpm-dev libxft-dev libxext-dev gfortran libxi-dev\
       libssl-dev libpcre3-dev  xlibmesa-glu-dev libglew1.5-dev libxi6\
       libfftw3-dev graphviz-dev \
       libavahi-compat-libdnssd-dev  libldap2-dev python-dev \
       libxml2-dev libkrb5-dev libgsl0-dev libqt4-dev nano vim \
-      libxerces-c-dev libboost-all-dev \
+      libxerces-c-dev libboost-all-dev
+
+RUN apt-get update  \
       && apt-get update \
-      && apt-get install -y gcc-7 g++-7 gfortran-7 \
+      && apt-get install -y gcc-8 g++-8 gfortran-8 \
       && gcc --version \
       && update-alternatives --remove-all cc  \
-      && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-7 30 \
-      && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 30 \
-      && update-alternatives --set cc /usr/bin/gcc-7 \
-      && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-7 30 \
-      && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 30 \
-      && update-alternatives --set c++ /usr/bin/g++-7 \
-      && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-7 30 \
-      && update-alternatives --set gfortran /usr/bin/gfortran-7 \
+      && update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-8 30 \
+      && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 30 \
+      && update-alternatives --set cc /usr/bin/gcc-8 \
+      && update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-8 30 \
+      && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 30 \
+      && update-alternatives --set c++ /usr/bin/g++-8 \
+      && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-8 30 \
+      && update-alternatives --set gfortran /usr/bin/gfortran-8 \
       && update-alternatives --config gcc \
       && update-alternatives --config g++ \
       && update-alternatives --config gfortran \
-      && apt-get clean \
+      && apt-get clean
+
+RUN apt-get update  \
       && ls -lrth /usr/bin/gcc* \
       && gfortran --version \
       && gcc --version      \
@@ -78,23 +82,25 @@ RUN cd /tmp \
 
 # Build root from the repo master
 RUN cd /tmp \
+      && apt-get install -y python-numpy python-scipy \
       && pwd \
-      && git clone --depth=1 http://root.cern.ch/git/root.git root_master \
+      && wget -O- https://root.cern.ch/download/root_v6.14.06.source.tar.gz | tar -zxvf - \
+      && mv root-6.14.06 root_master
       && mkdir -p builds/root_build \
       && cd builds/root_build \
-      && cmake ../../root_master/. -Dcxx14:BOOL=ON -Dgdml:BOOL=ON -Dmathmore:BOOL=ON -Dminuit2:BOOL=ON \
+      && cmake ../../root_master/. -Droot7:BOOL=ON -Dcxx17:BOOL=ON -Dfortran:BOOL=ON -Dgdml:BOOL=ON -Dmathmore:BOOL=ON -Dminuit2:BOOL=ON \
       && make -j38 install \
       && cd /tmp && rm -rf /tmp/root_master && rm -rf /tmp/builds/root_build 
 
-RUN useradd -ms /bin/bash -d /opt/bubble_user bubble_user
-USER bubble_user
+#RUN useradd -ms /bin/bash -d /opt/user user
+#USER user
 #WORKDIR /opt/bubble_user
 
 ##CMD ["-c" ]
 #ENTRYPOINT ["/bin/bash"]
 
-CMD ["-b" ]
-ENTRYPOINT ["root","-l"]
+#CMD ["-b" ]
+#ENTRYPOINT ["root","-l"]
 
 #RUN  cd /tmp \
 #      && rm -r builds/clhep_build
